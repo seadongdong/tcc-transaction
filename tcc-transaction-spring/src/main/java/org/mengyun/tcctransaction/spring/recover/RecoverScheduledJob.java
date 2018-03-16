@@ -4,6 +4,8 @@ import org.mengyun.tcctransaction.SystemException;
 import org.mengyun.tcctransaction.recover.TransactionRecovery;
 import org.mengyun.tcctransaction.support.TransactionConfigurator;
 import org.quartz.Scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.quartz.CronTriggerFactoryBean;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 
@@ -11,6 +13,8 @@ import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
  * Created by changming.xie on 6/2/16.
  */
 public class RecoverScheduledJob {
+	
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private TransactionRecovery transactionRecovery;
 
@@ -19,6 +23,7 @@ public class RecoverScheduledJob {
     private Scheduler scheduler;
 
     public void init() {
+    	
 
         try {
             MethodInvokingJobDetailFactoryBean jobDetail = new MethodInvokingJobDetailFactoryBean();
@@ -34,9 +39,10 @@ public class RecoverScheduledJob {
             cronTrigger.setJobDetail(jobDetail.getObject());
             cronTrigger.afterPropertiesSet();
 
+            logger.info("启动任务调度");
             scheduler.scheduleJob(jobDetail.getObject(), cronTrigger.getObject());
 
-
+            logger.info("quartz scheduler");
             scheduler.start();
 
         } catch (Exception e) {

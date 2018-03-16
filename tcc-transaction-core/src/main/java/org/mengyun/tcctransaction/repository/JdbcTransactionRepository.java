@@ -7,6 +7,8 @@ import org.mengyun.tcctransaction.serializer.JdkSerializationSerializer;
 import org.mengyun.tcctransaction.serializer.ObjectSerializer;
 import org.mengyun.tcctransaction.utils.CollectionUtils;
 import org.mengyun.tcctransaction.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.Xid;
@@ -19,6 +21,8 @@ import java.util.List;
  * Created by changmingxie on 10/30/15.
  */
 public class JdbcTransactionRepository extends CachableTransactionRepository {
+	
+	Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private String domain;
 
@@ -84,6 +88,8 @@ public class JdbcTransactionRepository extends CachableTransactionRepository {
             if (StringUtils.isNotEmpty(domain)) {
                 stmt.setString(10, domain);
             }
+            
+            logger.info("sql "+builder.toString());
 
             return stmt.executeUpdate();
 
@@ -129,7 +135,10 @@ public class JdbcTransactionRepository extends CachableTransactionRepository {
                 stmt.setString(8, domain);
             }
 
+            
+            logger.info("sql "+builder.toString());
             int result = stmt.executeUpdate();
+            
 
             return result;
 
@@ -211,6 +220,8 @@ public class JdbcTransactionRepository extends CachableTransactionRepository {
                 stmt.setString(2, domain);
             }
 
+            logger.info("sql "+builder.toString());
+            
             ResultSet resultSet = stmt.executeQuery();
 
             this.constructTransactions(resultSet, transactions);
@@ -266,6 +277,8 @@ public class JdbcTransactionRepository extends CachableTransactionRepository {
                 stmt.setString(++i, domain);
             }
 
+            logger.info("sql "+builder.toString());
+            
             ResultSet resultSet = stmt.executeQuery();
 
             this.constructTransactions(resultSet, transactions);

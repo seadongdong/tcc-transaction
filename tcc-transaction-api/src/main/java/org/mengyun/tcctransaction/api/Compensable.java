@@ -55,6 +55,7 @@ public @interface Compensable {
         public void set(TransactionContext transactionContext, Object target, Method method, Object[] args) {
 
             int position = getTransactionContextParamPosition(method.getParameterTypes());
+            
             if (position >= 0) {
                 args[position] = transactionContext;
             }

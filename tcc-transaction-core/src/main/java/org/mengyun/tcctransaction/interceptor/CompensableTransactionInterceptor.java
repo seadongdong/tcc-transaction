@@ -63,10 +63,13 @@ public class CompensableTransactionInterceptor {
 
         switch (methodType) {
             case ROOT:
+            		logger.info("开始root事务");
                 return rootMethodProceed(pjp, asyncConfirm, asyncCancel);
             case PROVIDER:
+            		logger.info("开始PROVIDER事务");
                 return providerMethodProceed(pjp, transactionContext, asyncConfirm, asyncCancel);
             default:
+            		logger.info("开始default事务");
                 return pjp.proceed();
         }
     }
@@ -74,6 +77,8 @@ public class CompensableTransactionInterceptor {
 
     private Object rootMethodProceed(ProceedingJoinPoint pjp, boolean asyncConfirm, boolean asyncCancel) throws Throwable {
 
+    		logger.info("开始root事务");
+    	
         Object returnValue = null;
 
         Transaction transaction = null;
@@ -83,14 +88,17 @@ public class CompensableTransactionInterceptor {
             transaction = transactionManager.begin();
 
             try {
+            	    logger.info("root 事务 开始切面事务");
                 returnValue = pjp.proceed();
+                logger.info("root 事务 结束切面事务");
             } catch (Throwable tryingException) {
 
+            		logger.error("root 事务 切面发生异常",tryingException);
                 if (isDelayCancelException(tryingException)) {
                     transactionManager.syncTransaction();
                 } else {
                     logger.warn(String.format("compensable transaction trying failed. transaction content:%s", JSON.toJSONString(transaction)), tryingException);
-
+                    logger.info("事务开始回滚",tryingException);
                     transactionManager.rollback(asyncCancel);
                 }
 
@@ -100,6 +108,7 @@ public class CompensableTransactionInterceptor {
             transactionManager.commit(asyncConfirm);
 
         } finally {
+        		logger.info("事务结束从线程队列事务移除");
             transactionManager.cleanAfterCompletion(transaction);
         }
 
@@ -108,14 +117,18 @@ public class CompensableTransactionInterceptor {
 
     private Object providerMethodProceed(ProceedingJoinPoint pjp, TransactionContext transactionContext, boolean asyncConfirm, boolean asyncCancel) throws Throwable {
 
+    		logger.info("开始分支事务");
+    		
         Transaction transaction = null;
         try {
 
             switch (TransactionStatus.valueOf(transactionContext.getStatus())) {
                 case TRYING:
+                		logger.info("分支事务 TYR--------");
                     transaction = transactionManager.propagationNewBegin(transactionContext);
                     return pjp.proceed();
                 case CONFIRMING:
+                		logger.info("分支事务 CONFIRMING--------");
                     try {
                         transaction = transactionManager.propagationExistBegin(transactionContext);
                         transactionManager.commit(asyncConfirm);
@@ -124,7 +137,7 @@ public class CompensableTransactionInterceptor {
                     }
                     break;
                 case CANCELLING:
-
+                		logger.info("分支事务 CANCELLING--------");
                     try {
                         transaction = transactionManager.propagationExistBegin(transactionContext);
                         transactionManager.rollback(asyncCancel);

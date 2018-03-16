@@ -34,18 +34,22 @@ public class TransactionManager {
     }
 
     public Transaction begin() {
-
+    	
+    		logger.info("创建事务，事务类型为根事务ROOT");
         Transaction transaction = new Transaction(TransactionType.ROOT);
+        logger.info("事务日志持久化");
         transactionRepository.create(transaction);
+        logger.info("注册事务，添加到线程的局部变量");
         registerTransaction(transaction);
         return transaction;
     }
 
     public Transaction propagationNewBegin(TransactionContext transactionContext) {
-
+    		logger.info("从transactionContext创建一个事务");
         Transaction transaction = new Transaction(transactionContext);
+        logger.info("事务日志持久化");
         transactionRepository.create(transaction);
-
+        logger.info("注册事务，添加到线程的局部变量");
         registerTransaction(transaction);
         return transaction;
     }
@@ -161,6 +165,7 @@ public class TransactionManager {
 
     private void registerTransaction(Transaction transaction) {
 
+    		//如果队列中还没有就先创建一个
         if (CURRENT.get() == null) {
             CURRENT.set(new LinkedList<Transaction>());
         }
@@ -184,5 +189,6 @@ public class TransactionManager {
         Transaction transaction = this.getCurrentTransaction();
         transaction.enlistParticipant(participant);
         transactionRepository.update(transaction);
+        System.out.println(" 新的事务参与者： "+transaction.getParticipants());
     }
 }
